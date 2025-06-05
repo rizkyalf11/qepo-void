@@ -17,7 +17,7 @@ import { api } from "~/utils/api";
 import { RegisterFormInner } from "../components/RegisterFormInner";
 import { registerFormSchema, type RegisterFormSchema } from "../forms/register";
 
-const RegisterPage = () => {
+const LoginPage = () => {
   const form = useForm<RegisterFormSchema>({
     resolver: zodResolver(registerFormSchema),
   });
@@ -44,7 +44,7 @@ const RegisterPage = () => {
         <Card className="w-full max-w-[480px] self-center">
           <CardHeader className="flex flex-col items-center justify-center">
             {/* LOGO */}
-            <h1 className="text-primary text-3xl font-bold">Buat Akun</h1>
+            <h1 className="text-primary text-3xl font-bold">Masuk Akun</h1>
             <p className="text-muted-foreground">
               Kepoin kreator favorite kamu
             </p>
@@ -54,7 +54,7 @@ const RegisterPage = () => {
               <RegisterFormInner
                 isLoading={registerUserIsPending}
                 onRegisterSubmit={handleRegisterSubmit}
-                showPassword
+                buttonText="Masuk"
               />
             </Form>
           </CardContent>
@@ -69,13 +69,13 @@ const RegisterPage = () => {
 
             <Button className="w-full" size="lg" variant="secondary">
               <FcGoogle />
-              Buat Akun dengan Google
+              Masuk dengan Google
             </Button>
 
             <p>
-              Sudah punya akun{" "}
-              <Link className="font-bold text-blue-600" href="/login">
-                Login
+              Belum punya akun{" "}
+              <Link className="font-bold text-blue-600" href="/register">
+                Register
               </Link>{" "}
             </p>
           </CardFooter>
@@ -85,4 +85,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default LoginPage;

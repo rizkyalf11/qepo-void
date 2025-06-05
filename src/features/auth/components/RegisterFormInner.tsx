@@ -1,8 +1,7 @@
-import { Checkbox } from "@radix-ui/react-checkbox";
-import { Label } from "@radix-ui/react-label";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   FormControl,
   FormDescription,
@@ -12,11 +11,14 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import type { RegisterFormSchema } from "../forms/register";
 
 type RegisterFormInnerProps = {
   onRegisterSubmit: (values: RegisterFormSchema) => void;
-  isLoading: boolean;
+  isLoading?: boolean;
+  buttonText?: string;
+  showPassword?: boolean;
 };
 
 export const RegisterFormInner = (props: RegisterFormInnerProps) => {
@@ -57,15 +59,19 @@ export const RegisterFormInner = (props: RegisterFormInnerProps) => {
         )}
       />
 
-      <Label className="flex items-center gap-2">
-        <Checkbox
-          checked={showPassword}
-          onCheckedChange={(val) => setShowPassword(!!val)}
-        />
-        Show Password
-      </Label>
+      {props.showPassword && (
+        <Label className="flex items-center gap-2">
+          <Checkbox
+            checked={showPassword}
+            onCheckedChange={(val) => setShowPassword(!!val)}
+          />
+          Show Password
+        </Label>
+      )}
 
-      <Button disabled={props.isLoading} className="mt-4 w-full">Buat Akun</Button>
+      <Button disabled={props.isLoading} className="mt-4 w-full">
+        {props.buttonText ?? "Buat Akun"}
+      </Button>
     </form>
   );
 };
