@@ -1,23 +1,28 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { FcGoogle } from "react-icons/fc";
 import { PageContainer } from "~/components/layout/PageContainer";
 import { SectionContainer } from "~/components/layout/SectionContainer";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Checkbox } from "~/components/ui/checkbox";
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "~/components/ui/card";
+import { Form } from "~/components/ui/form";
+import { RegisterFormInner } from "../components/RegisterFormInner";
+import { registerFormSchema, type RegisterFormSchema } from "../forms/register";
 
 const RegisterPage = () => {
-  const form = useForm();
+  const form = useForm<RegisterFormSchema>({
+    resolver: zodResolver(registerFormSchema),
+  });
+
+  const handleRegisterSubmit = (values: RegisterFormSchema) => {
+    alert("register");
+  };
 
   return (
     <PageContainer>
@@ -32,47 +37,30 @@ const RegisterPage = () => {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form className="flex flex-col gap-y-1">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormDescription />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormDescription />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Label className="flex items-center gap-2">
-                  <Checkbox />
-                  Show Password
-                </Label>
-
-                <Button className="w-full mt-4">Buat Akun</Button>
-              </form>
+              <RegisterFormInner onRegisterSubmit={handleRegisterSubmit} />
             </Form>
-
-            
           </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+            <div className="flex w-full items-center justify-between gap-x-4">
+              <div className="h-[2px] w-full border-t-2" />
+              <p className="text-muted-foreground flex-1 text-sm text-nowrap">
+                Atau lanjut dengan
+              </p>
+              <div className="h-[2px] w-full border-t-2" />
+            </div>
+
+            <Button className="w-full" size="lg" variant="secondary">
+              <FcGoogle />
+              Buat Akun dengan Google
+            </Button>
+
+            <p>
+              Sudah punya akun{" "}
+              <Link className="font-bold text-blue-600" href="/login">
+                Login
+              </Link>{" "}
+            </p>
+          </CardFooter>
         </Card>
       </SectionContainer>
     </PageContainer>
