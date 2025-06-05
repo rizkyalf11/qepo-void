@@ -16,6 +16,7 @@ import type { RegisterFormSchema } from "../forms/register";
 
 type RegisterFormInnerProps = {
   onRegisterSubmit: (values: RegisterFormSchema) => void;
+  isLoading: boolean;
 };
 
 export const RegisterFormInner = (props: RegisterFormInnerProps) => {
@@ -64,7 +65,7 @@ export const RegisterFormInner = (props: RegisterFormInnerProps) => {
         Show Password
       </Label>
 
-      <Button className="mt-4 w-full">Buat Akun</Button>
+      <Button disabled={props.isLoading} className="mt-4 w-full">Buat Akun</Button>
     </form>
   );
 };
