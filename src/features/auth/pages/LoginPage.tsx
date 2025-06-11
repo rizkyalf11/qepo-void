@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { type AuthError } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
@@ -13,29 +14,42 @@ import {
   CardHeader,
 } from "~/components/ui/card";
 import { Form } from "~/components/ui/form";
-import { api } from "~/utils/api";
+import { SupabaseAuthErrorCode } from "~/lib/supabase/authErrorCodes";
+import { supabase } from "~/lib/supabase/client";
 import { RegisterFormInner } from "../components/RegisterFormInner";
 import { registerFormSchema, type RegisterFormSchema } from "../forms/register";
+import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
   const form = useForm<RegisterFormSchema>({
     resolver: zodResolver(registerFormSchema),
   });
 
-  const { mutate: registerUser, isPending: registerUserIsPending } =
-    api.auth.register.useMutation({
-      onSuccess: () => {
-        toast("Akun kamu berhasil dibuat!");
-        form.setValue("email", "");
-        form.setValue("password", "");
-      },
-      onError: () => {
-        toast.error("Terjadi kesalahan!, coba beberapa saat lagi!");
-      },
-    });
+  const router = useRouter();
 
-  const handleRegisterSubmit = (values: RegisterFormSchema) => {
-    registerUser(values);
+  const handleLoginSubmit = async (values: RegisterFormSchema) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (error) throw error;
+
+      router.replace("/");
+    } catch (error) {
+      switch ((error as AuthError).code) {
+        case SupabaseAuthErrorCode.invalid_credentials:
+          form.setError("email", { message: "Email atau Password Salah" });
+          form.setError("password", { message: "Email atau Password Salah" });
+          break;
+        case SupabaseAuthErrorCode.email_not_confirmed:
+          form.setError("email", { message: "Email belum Diverifikasi!" });
+          break;
+        default:
+          toast.error("Sebuah kesalahan terjadi, coba lagi beberapa saat.");
+      }
+    }
   };
 
   return (
@@ -52,8 +66,7 @@ const LoginPage = () => {
           <CardContent>
             <Form {...form}>
               <RegisterFormInner
-                isLoading={registerUserIsPending}
-                onRegisterSubmit={handleRegisterSubmit}
+                onRegisterSubmit={handleLoginSubmit}
                 buttonText="Masuk"
               />
             </Form>
