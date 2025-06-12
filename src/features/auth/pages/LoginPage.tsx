@@ -59,7 +59,7 @@ const LoginPage = () => {
         <SectionContainer
           padded
           minFullscreen
-          className="mx-auto justify-center"
+          className="justify-center"
         >
           <Card className="w-full max-w-[480px] self-center">
             <CardHeader className="flex flex-col items-center justify-center">
