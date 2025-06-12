@@ -18,7 +18,8 @@ import { SupabaseAuthErrorCode } from "~/lib/supabase/authErrorCodes";
 import { supabase } from "~/lib/supabase/client";
 import { RegisterFormInner } from "../components/RegisterFormInner";
 import { registerFormSchema, type RegisterFormSchema } from "../forms/register";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
+import { GuestRoute } from "~/components/layout/GuestRoute";
 
 const LoginPage = () => {
   const form = useForm<RegisterFormSchema>({
@@ -36,7 +37,7 @@ const LoginPage = () => {
 
       if (error) throw error;
 
-      router.replace("/");
+      await router.replace("/");
     } catch (error) {
       switch ((error as AuthError).code) {
         case SupabaseAuthErrorCode.invalid_credentials:
@@ -53,48 +54,54 @@ const LoginPage = () => {
   };
 
   return (
-    <PageContainer>
-      <SectionContainer padded minFullscreen className="mx-auto justify-center">
-        <Card className="w-full max-w-[480px] self-center">
-          <CardHeader className="flex flex-col items-center justify-center">
-            {/* LOGO */}
-            <h1 className="text-primary text-3xl font-bold">Masuk Akun</h1>
-            <p className="text-muted-foreground">
-              Kepoin kreator favorite kamu
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <RegisterFormInner
-                onRegisterSubmit={handleLoginSubmit}
-                buttonText="Masuk"
-              />
-            </Form>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <div className="flex w-full items-center justify-between gap-x-4">
-              <div className="h-[2px] w-full border-t-2" />
-              <p className="text-muted-foreground flex-1 text-sm text-nowrap">
-                Atau lanjut dengan
+    <GuestRoute>
+      <PageContainer>
+        <SectionContainer
+          padded
+          minFullscreen
+          className="mx-auto justify-center"
+        >
+          <Card className="w-full max-w-[480px] self-center">
+            <CardHeader className="flex flex-col items-center justify-center">
+              {/* LOGO */}
+              <h1 className="text-primary text-3xl font-bold">Masuk Akun</h1>
+              <p className="text-muted-foreground">
+                Kepoin kreator favorite kamu
               </p>
-              <div className="h-[2px] w-full border-t-2" />
-            </div>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <RegisterFormInner
+                  onRegisterSubmit={handleLoginSubmit}
+                  buttonText="Masuk"
+                />
+              </Form>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <div className="flex w-full items-center justify-between gap-x-4">
+                <div className="h-[2px] w-full border-t-2" />
+                <p className="text-muted-foreground flex-1 text-sm text-nowrap">
+                  Atau lanjut dengan
+                </p>
+                <div className="h-[2px] w-full border-t-2" />
+              </div>
 
-            <Button className="w-full" size="lg" variant="secondary">
-              <FcGoogle />
-              Masuk dengan Google
-            </Button>
+              <Button className="w-full" size="lg" variant="secondary">
+                <FcGoogle />
+                Masuk dengan Google
+              </Button>
 
-            <p>
-              Belum punya akun{" "}
-              <Link className="font-bold text-blue-600" href="/register">
-                Register
-              </Link>{" "}
-            </p>
-          </CardFooter>
-        </Card>
-      </SectionContainer>
-    </PageContainer>
+              <p>
+                Belum punya akun{" "}
+                <Link className="font-bold text-blue-600" href="/register">
+                  Register
+                </Link>{" "}
+              </p>
+            </CardFooter>
+          </Card>
+        </SectionContainer>
+      </PageContainer>
+    </GuestRoute>
   );
 };
 
