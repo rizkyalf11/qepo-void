@@ -1,3 +1,5 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 import { createTRPCRouter, privateProcedure } from "../trpc";
 
 export const profileRouter = createTRPCRouter({
@@ -16,4 +18,47 @@ export const profileRouter = createTRPCRouter({
 
     return profile;
   }),
+
+  updateProfile: privateProcedure
+    .input(
+      z.object({
+        // TODO: sanitize username input
+        username: z.string().min(3).max(16).toLowerCase().optional(),
+        bio: z.string().max(300).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, user } = ctx;
+      const { username, bio } = input;
+
+      if (username) {
+        const usernameExists = await db.profile.findUnique({
+          where: {
+            username,
+          },
+          select: {
+            userId: true,
+          },
+        });
+
+        if (usernameExists) {
+          throw new TRPCError({
+            code: "UNPROCESSABLE_CONTENT",
+            message: "Username already used",
+          });
+        }
+      }
+
+      const updatedUser = await db.profile.update({
+        where: {
+          userId: user?.id,
+        },
+        data: {
+          username,
+          bio,
+        },
+      });
+
+      return updatedUser;
+    }),
 });

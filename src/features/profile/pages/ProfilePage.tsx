@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { AvatarImage } from "@radix-ui/react-avatar";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { PageContainer } from "~/components/layout/PageContainer";
 import { SectionContainer } from "~/components/layout/SectionContainer";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
@@ -8,14 +9,56 @@ import { Card, CardContent } from "~/components/ui/card";
 import { api } from "~/utils/api";
 import { EditProfileFormInner } from "../components/editProfileFormInner";
 import { AuthRoute } from "~/components/layout/AuthRoute";
+import { useForm } from "react-hook-form";
+import type { EditProfileFormSchema } from "../forms/editProfile";
+import { Form } from "~/components/ui/form";
+import { toast } from "sonner";
 
 const ProfilePage = () => {
   const { data: getProfileData } = api.profile.getProfile.useQuery();
 
+  const form = useForm<EditProfileFormSchema>();
+
+  const updateProfile = api.profile.updateProfile.useMutation({
+    onSuccess: () => {
+      form.reset()
+      toast.success("Berhasil update profile");
+    },
+    onError: (err) => {
+      if (err.data?.code === "UNPROCESSABLE_CONTENT") {
+        toast.error("Username sudah digunakan");
+      } else {
+        toast.error("Gagal update profile");
+      }
+    },
+  });
+
   const inputFileRef = useRef<HTMLInputElement>(null);
+
+  const handleUpdateProfile = (values: EditProfileFormSchema) => {
+    const payload: { username?: string; bio?: string } = {};
+
+    if (values.username != getProfileData?.username) {
+      payload.username = values.username;
+    }
+
+    if (values.bio !== getProfileData?.bio) {
+      payload.bio = values.bio;
+    }
+
+    updateProfile.mutate(payload);
+  };
+
   const handleOpenFileExplorel = () => {
     inputFileRef.current?.click();
   };
+
+  useEffect(() => {
+    if (getProfileData) {
+      form.setValue("username", getProfileData.username ?? "");
+      form.setValue("bio", getProfileData.bio ?? "");
+    }
+  }, [getProfileData]);
 
   return (
     <AuthRoute>
@@ -38,19 +81,21 @@ const ProfilePage = () => {
 
               <div className="grid flex-1 grid-cols-2 gap-y-4">
                 {getProfileData && (
-                  <EditProfileFormInner
-                    defaultValues={{
-                      bio: getProfileData?.bio,
-                      username: getProfileData?.username,
-                    }}
-                  />
+                  <Form {...form}>
+                    <EditProfileFormInner />
+                  </Form>
                 )}
               </div>
             </CardContent>
           </Card>
 
           <div className="flex justify-end gap-4">
-            <Button>Simpan</Button>
+            <Button
+              disabled={!form.formState.isDirty}
+              onClick={form.handleSubmit(handleUpdateProfile)}
+            >
+              Simpan
+            </Button>
           </div>
         </SectionContainer>
       </PageContainer>
