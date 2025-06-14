@@ -1,32 +1,66 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AvatarImage } from "@radix-ui/react-avatar";
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEventHandler,
+} from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { AuthRoute } from "~/components/layout/AuthRoute";
 import { PageContainer } from "~/components/layout/PageContainer";
 import { SectionContainer } from "~/components/layout/SectionContainer";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
+import { Form } from "~/components/ui/form";
 import { api } from "~/utils/api";
 import { EditProfileFormInner } from "../components/editProfileFormInner";
-import { AuthRoute } from "~/components/layout/AuthRoute";
-import { useForm } from "react-hook-form";
-import type { EditProfileFormSchema } from "../forms/editProfile";
-import { Form } from "~/components/ui/form";
-import { toast } from "sonner";
+import {
+  editProfileFormSchema,
+  type EditProfileFormSchema,
+} from "../forms/editProfile";
 
 const ProfilePage = () => {
+  const [selectedImage, setSelectedImage] = useState<File | null | undefined>(
+    null,
+  );
+
+  const apiUtils = api.useUtils();
+
+  const updateProfilePicture = api.profile.updateProfilePicture.useMutation({
+    onSuccess: async () => {
+      toast.success("Berhasil ganti poto profile");
+      setSelectedImage(null);
+      await apiUtils.profile.getProfile.invalidate();
+    },
+    onError: () => {
+      toast.error("ada kesalahan");
+    },
+  });
+
+  const [selectedImagePreview, setSelectedImagePreview] = useState("");
+
   const { data: getProfileData } = api.profile.getProfile.useQuery();
 
-  const form = useForm<EditProfileFormSchema>();
+  const form = useForm<EditProfileFormSchema>({
+    resolver: zodResolver(editProfileFormSchema),
+  });
 
   const updateProfile = api.profile.updateProfile.useMutation({
     onSuccess: () => {
-      form.reset()
+      form.reset();
       toast.success("Berhasil update profile");
     },
     onError: (err) => {
       if (err.data?.code === "UNPROCESSABLE_CONTENT") {
         toast.error("Username sudah digunakan");
+        form.setError("username", {
+          message: "username sudah digunakan",
+        });
       } else {
         toast.error("Gagal update profile");
       }
@@ -53,6 +87,37 @@ const ProfilePage = () => {
     inputFileRef.current?.click();
   };
 
+  const onPickProfilePicture: ChangeEventHandler<HTMLInputElement> = (e) => {
+    if (e.target.files) {
+      setSelectedImage(e.target.files[0]);
+    }
+  };
+
+  const selectedProfilePicturePreview = useMemo(() => {
+    if (selectedImage) {
+      return URL.createObjectURL(selectedImage);
+    }
+  }, [selectedImage]);
+
+  const handleRemoveSelectedImage = () => {
+    setSelectedImage(null);
+  };
+
+  const handleUpdateProfilePicture = async () => {
+    if (selectedImage) {
+      const reader = new FileReader();
+
+      reader.onloadend = function () {
+        const result = reader.result as string;
+        const imageBase64 = result.substring(result.indexOf(",") + 1);
+
+        updateProfilePicture.mutate(imageBase64);
+      };
+
+      reader.readAsDataURL(selectedImage);
+    }
+  };
+
   useEffect(() => {
     if (getProfileData) {
       form.setValue("username", getProfileData.username ?? "");
@@ -71,12 +136,38 @@ const ProfilePage = () => {
               <div className="flex flex-col gap-4">
                 <Avatar className="size-24">
                   <AvatarFallback>VC</AvatarFallback>
-                  <AvatarImage />
+                  <AvatarImage
+                    src={
+                      selectedProfilePicturePreview ??
+                      getProfileData?.profilePictureUrl ??
+                      ""
+                    }
+                  />
                 </Avatar>
                 <Button onClick={handleOpenFileExplorel} size="sm">
                   Ganti Foto
                 </Button>
-                <input className="hidden" type="file" ref={inputFileRef} />
+                {!!selectedImage && (
+                  <>
+                    <Button
+                      onClick={handleRemoveSelectedImage}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      Hapus
+                    </Button>
+                    <Button onClick={handleUpdateProfilePicture} size="sm">
+                      Simpan
+                    </Button>
+                  </>
+                )}
+                <input
+                  accept="image/*"
+                  onChange={onPickProfilePicture}
+                  className="hidden"
+                  type="file"
+                  ref={inputFileRef}
+                />
               </div>
 
               <div className="grid flex-1 grid-cols-2 gap-y-4">
